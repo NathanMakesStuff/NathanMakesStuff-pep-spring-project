@@ -23,10 +23,57 @@ public class SocialMediaController {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private MessageService messageService;
+
     @PostMapping(value = "/register")
     public ResponseEntity<Account> registerAccount(@RequestBody Account newAccount){
         Account registeredAccount = accountService.addAccount(newAccount);
         if(registeredAccount != null) return ResponseEntity.ok(registeredAccount);
         else return ResponseEntity.status(409).body(null);
+    }
+
+    @PostMapping(value = "/login")
+    public ResponseEntity<Account> loginHandler(@RequestBody Account account){
+        return accountService.login(account);
+    }
+
+    @PostMapping(value = "/messages")
+    public ResponseEntity<Message> createMessage(@RequestBody Message newMessage){
+        Message sentMessage = messageService.sendMessage(newMessage);
+        if(sentMessage != null) return ResponseEntity.ok(sentMessage);
+        else return ResponseEntity.status(400).body(null);
+    }
+
+    @DeleteMapping(value = "/messages/{deletedMessageID}")
+    public ResponseEntity<Integer> deleteMessage(@PathVariable Integer deletedMessageID){
+        return ResponseEntity.ok().body(messageService.deleteMessageByID(deletedMessageID));
+                
+    }
+
+    @GetMapping(value = "/messages/{retrievedMessageID}") 
+    public ResponseEntity<Message> retrieveMessage(@PathVariable Integer retrievedMessageID) {
+        Message retrievedMessage = messageService.getMessageById(retrievedMessageID);
+        return ResponseEntity.ok(retrievedMessage);
+    }
+
+    @GetMapping(value = "/messages") 
+    public ResponseEntity<List<Message>> retrieveAllMessages() {
+        List<Message> retrievedMessage = messageService.getAllMessages();
+        return ResponseEntity.ok(retrievedMessage);
+    }
+
+    @GetMapping(value = "/accounts/{accountID}/messages") 
+    public ResponseEntity<List<Message>> retrieveAllUserMessages(@PathVariable Integer accountID) {
+        List<Message> retrievedMessage = messageService.getAllUserMessages(accountID);
+        return ResponseEntity.ok(retrievedMessage);
+    }
+
+    @PatchMapping(value = "/messages/{updatedMessageId}")
+    public ResponseEntity<Integer> updateMessage(@PathVariable("updatedMessageId") Integer updatedMessageID, @RequestBody Message newMessage) {
+        String newText = newMessage.getMessage_text();
+        if(messageService.getMessageById(updatedMessageID)!= null && newText != "" && newText.length() < 255)
+            return ResponseEntity.ok().body(messageService.updateMessage(newText, updatedMessageID));
+        else return ResponseEntity.badRequest().body(null);
     }
 }
